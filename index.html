@@ -939,6 +939,9 @@ async function loadProde(){
     if(part.pin_hash && hash!==part.pin_hash){toast('⚠️ PIN incorrecto');document.getElementById('prode-player').value='';return;}
     buildGroupsForm();
     buildKOForm();
+    // Asegurar que la primera pestaña esté activa
+    document.querySelectorAll('.ptab').forEach((b,i)=>b.classList.toggle('active',i===0));
+    document.querySelectorAll('.ptab-content').forEach((c,i)=>c.classList.toggle('active',i===0));
     const prodes=await dbGetProdes();
     const pm={};prodes.forEach(p=>pm[p.participante_id]=p);
     const allDone=parts.length>0&&parts.every(p=>pm[p.id]);
