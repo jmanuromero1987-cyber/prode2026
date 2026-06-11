@@ -934,19 +934,28 @@ async function loadProde(){
   const parts=await dbGetParts();
   const part=parts.find(p=>String(p.id)===String(pid));
   if(!part)return;
-  await _showProdeContent(pid, parts);
+  if(part.pin_hash && part.pin_hash!==''){
+    openPinModal(`PIN de ${part.nombre}`, async (pin)=>{
+      const hash=await hashPin(pin);
+      if(hash!==part.pin_hash){toast('⚠️ PIN incorrecto');document.getElementById('prode-player').value='';return;}
+      await _showProdeContent(pid,parts);
+    });
+  } else {
+    await _showProdeContent(pid,parts);
+  }
 }
 
 async function _showProdeContent(pid, parts){
   const content=document.getElementById('prode-content'),lock=document.getElementById('lock-notice');
+  content.style.display='block';
+  lock.style.display='none';
   buildGroupsForm();
   buildKOForm();
   document.querySelectorAll('.ptab').forEach((b,i)=>b.classList.toggle('active',i===0));
-  document.querySelectorAll('.ptab-content').forEach((c,i)=>c.classList.toggle('active',i===0));
+  document.querySelectorAll('.ptab-content').forEach((c,i)=>{c.style.display=i===0?'block':'none';c.classList.toggle('active',i===0);});
   const prodes=await dbGetProdes();
   const pm={};prodes.forEach(p=>pm[p.participante_id]=p);
   const allDone=parts.length>0&&parts.every(p=>pm[p.id]);
-  content.style.display='block';
   lock.style.display=allDone?'none':'block';
   const d=pm[pid]||{};
   if(d.scores){try{const scores=JSON.parse(d.scores);Object.entries(scores).forEach(([mid,v])=>{const hi=document.getElementById(`m_${mid}_h`),ai=document.getElementById(`m_${mid}_a`);if(hi)hi.value=v.h!==undefined?v.h:'';if(ai)ai.value=v.a!==undefined?v.a:'';});}catch(e){}}
