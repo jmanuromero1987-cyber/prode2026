@@ -240,7 +240,7 @@ const ADMIN_PASSWORD='golosinas2026';
   <div class="card" style="margin-bottom:12px">
     <div class="card-title">📋 Cómo participar</div>
     <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;line-height:1.6;color:var(--text)">
-      <div style="display:flex;gap:10px;align-items:flex-start"><span style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--gold);line-height:1;min-width:28px">1</span><div><strong>Registrate</strong> en la pestaña <em>Jugadores</em> con tu nombre, un PIN de 4 dígitos (no lo olvides, es tuyo y nadie más puede verlo) y opcionalmente una foto de perfil.</div></div>
+      <div style="display:flex;gap:10px;align-items:flex-start"><span style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--gold);line-height:1;min-width:28px">1</span><div><strong>Registrate</strong> en la pestaña <em>Jugadores</em> con tu nombre y opcionalmente una foto de perfil.</div></div>
       <div style="display:flex;gap:10px;align-items:flex-start"><span style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--gold);line-height:1;min-width:28px">2</span><div><strong>Cargá tu prode</strong> en la pestaña <em>Mi Prode</em>. Vas a necesitar ingresar tu PIN. Hay tres secciones: formación inicial, resultados de los 72 partidos de grupos, y fase eliminatoria (una vez que se conozcan los cruces).</div></div>
       <div style="display:flex;gap:10px;align-items:flex-start"><span style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--gold);line-height:1;min-width:28px">3</span><div><strong>Seguí el ranking</strong> en tiempo real desde la pestaña <em>Ranking</em>. Los puntos se actualizan cada vez que el administrador carga los resultados reales.</div></div>
     </div>
@@ -280,7 +280,6 @@ const ADMIN_PASSWORD='golosinas2026';
     <div class="card-title">🔒 Reglas y plazos</div>
     <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;line-height:1.6;color:var(--text)">
       <div style="padding:8px 12px;background:var(--bg-card2);border-radius:8px">⏰ <strong>Cierre automático:</strong> cada partido se bloquea <strong>30 minutos antes</strong> del pitazo inicial. Si no cargaste tu pronóstico para ese partido, queda registrado 0-0.</div>
-      <div style="padding:8px 12px;background:var(--bg-card2);border-radius:8px">🔐 <strong>PIN personal:</strong> cada participante tiene su propio PIN. Nadie puede modificar el prode de otro. Si olvidás tu PIN, hablá con el administrador.</div>
       <div style="padding:8px 12px;background:var(--bg-card2);border-radius:8px">👁 <strong>Prodes ocultos:</strong> no vas a poder ver el prode de los demás hasta que todos hayan cargado el suyo. Así nadie copia.</div>
       <div style="padding:8px 12px;background:var(--bg-card2);border-radius:8px">📊 <strong>Fase eliminatoria:</strong> los cruces se habilitarán una vez que el administrador cargue los clasificados. A partir de ahí podés seguir pronosticando.</div>
       <div style="padding:8px 12px;background:rgba(116,172,223,0.08);border:1px solid rgba(116,172,223,0.25);border-radius:8px">🇦🇷 <strong>Partidos de Argentina</strong> están resaltados en azul en la sección de grupos.</div>
@@ -313,7 +312,6 @@ const ADMIN_PASSWORD='golosinas2026';
     <h3>Agregar participante</h3>
     <div class="form-row">
       <div class="form-group"><label>Nombre</label><input type="text" id="new-name" placeholder="Tu nombre..." onkeydown="if(event.key==='Enter')addParticipant()"/></div>
-      <div class="form-group"><label>PIN (4 dígitos)</label><input type="password" id="new-pin" maxlength="4" placeholder="••••" style="letter-spacing:.2em"/></div>
       <div class="form-group"><label>Foto de perfil</label>
         <div class="photo-input">
           <div class="photo-preview" id="photo-preview">📷</div>
@@ -747,13 +745,9 @@ function previewPhoto(input){const file=input.files[0];if(!file)return;const r=n
 // ─── PARTICIPANTS ────────────────────────────────────────────────
 async function addParticipant(){
   const name=document.getElementById('new-name').value.trim();
-  const pinRaw=document.getElementById('new-pin').value.trim();
   if(!name){toast('⚠️ Ingresá un nombre');return;}
-  if(!/^\d{4}$/.test(pinRaw)){toast('⚠️ El PIN debe ser de 4 dígitos numéricos');return;}
-  const pinHash=await hashPin(pinRaw);
-  const p=await dbAddPart(name,photoData,pinHash);if(!p){toast('⚠️ Ese nombre ya existe');return;}
+  const p=await dbAddPart(name,photoData,'');if(!p){toast('⚠️ Ese nombre ya existe');return;}
   document.getElementById('new-name').value='';
-  document.getElementById('new-pin').value='';
   document.getElementById('photo-preview').innerHTML='📷';photoData='';
   renderParts();refreshSelect();toast('✅ '+name+' agregado!');
 }
@@ -932,17 +926,7 @@ async function loadProde(){
   const content=document.getElementById('prode-content'),lock=document.getElementById('lock-notice');
   if(!pid){content.style.display='none';lock.style.display='none';return;}
   const parts=await dbGetParts();
-  const part=parts.find(p=>String(p.id)===String(pid));
-  if(!part)return;
-  if(part.pin_hash && part.pin_hash!==''){
-    openPinModal(`PIN de ${part.nombre}`, async (pin)=>{
-      const hash=await hashPin(pin);
-      if(hash!==part.pin_hash){toast('⚠️ PIN incorrecto');document.getElementById('prode-player').value='';return;}
-      setTimeout(async()=>{ await _showProdeContent(pid,parts); }, 100);
-    });
-  } else {
-    await _showProdeContent(pid,parts);
-  }
+  await _showProdeContent(pid,parts);
 }
 
 async function _showProdeContent(pid, parts){
