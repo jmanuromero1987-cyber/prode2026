@@ -654,9 +654,15 @@ let pinCallback = null;
 let pinParticipantId = null;
 
 async function hashPin(pin) {
-  const enc = new TextEncoder().encode(pin + 'prode2026salt');
-  const buf = await crypto.subtle.digest('SHA-256', enc);
-  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('').slice(0,16);
+  // Simple hash que funciona en HTTP, HTTPS y archivos locales
+  const str = pin + 'prode2026salt';
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const chr = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + chr;
+    hash |= 0;
+  }
+  return 'p' + Math.abs(hash).toString(16).padStart(8,'0');
 }
 
 function openPinModal(msg, cb) {
@@ -728,7 +734,7 @@ function tick(){const debut=new Date('2026-06-17T01:00:00Z');const diff=debut-ne
 setInterval(tick,1000);tick();
 
 // ─── NAV ────────────────────────────────────────────────────────
-function showTab(t){document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));document.getElementById('nav-'+t).classList.add('active');document.getElementById('tab-'+t).classList.add('active');if(t==='participantes')renderParts();if(t==='prode'){refreshSelect();buildSquadList();buildGroupsForm();buildKOForm();}if(t==='ranking')renderRanking();}
+function showTab(t){document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));document.getElementById('nav-'+t).classList.add('active');document.getElementById('tab-'+t).classList.add('active');if(t==='participantes')renderParts();if(t==='prode'){refreshSelect();buildSquadList();}if(t==='ranking')renderRanking();}
 function showPtab(id){document.querySelectorAll('.ptab').forEach(b=>b.classList.remove('active'));document.querySelectorAll('.ptab-content').forEach(c=>c.classList.remove('active'));document.getElementById(id).classList.add('active');const idx=['pt-formacion','pt-grupos','pt-eliminacion','pt-campeon'].indexOf(id);document.querySelectorAll('.ptab')[idx].classList.add('active');}
 
 // ─── TOAST ──────────────────────────────────────────────────────
@@ -931,6 +937,8 @@ async function loadProde(){
   openPinModal(`PIN de ${part.nombre}`, async (pin)=>{
     const hash=await hashPin(pin);
     if(part.pin_hash && hash!==part.pin_hash){toast('⚠️ PIN incorrecto');document.getElementById('prode-player').value='';return;}
+    buildGroupsForm();
+    buildKOForm();
     const prodes=await dbGetProdes();
     const pm={};prodes.forEach(p=>pm[p.participante_id]=p);
     const allDone=parts.length>0&&parts.every(p=>pm[p.id]);
