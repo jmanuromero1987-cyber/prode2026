@@ -938,7 +938,7 @@ async function loadProde(){
     openPinModal(`PIN de ${part.nombre}`, async (pin)=>{
       const hash=await hashPin(pin);
       if(hash!==part.pin_hash){toast('⚠️ PIN incorrecto');document.getElementById('prode-player').value='';return;}
-      await _showProdeContent(pid,parts);
+      setTimeout(async()=>{ await _showProdeContent(pid,parts); }, 100);
     });
   } else {
     await _showProdeContent(pid,parts);
