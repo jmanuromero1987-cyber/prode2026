@@ -962,8 +962,9 @@ async function _showProdeContent(pid, parts){
   if(d.xi){try{const xi=JSON.parse(d.xi);Object.entries(xi).forEach(([sid,playerId])=>{const player=SQUAD.find(p=>p.id===playerId);if(!player)return;slotMap[sid]=playerId;const circle=document.getElementById('circle-'+sid);if(!circle)return;circle.classList.add('filled');circle.querySelector('.slot-num').style.display='none';document.getElementById('name-'+sid).textContent=player.short;const chip=document.getElementById('chip-'+playerId);if(chip){chip.classList.add('used');chip.draggable=false;}});updateCount();}catch(e){}}
   // Load scores after form is built
   setTimeout(()=>{
-    if(d.scores){try{const scores=JSON.parse(d.scores);Object.entries(scores).forEach(([mid,v])=>{const hi=document.getElementById(`m_${mid}_h`),ai=document.getElementById(`m_${mid}_a`);if(hi)hi.value=v.h!==undefined?v.h:'';if(ai)ai.value=v.a!==undefined?v.a:'';});}catch(e){}}
-    if(d.ko_scores){try{const ks=JSON.parse(d.ko_scores);Object.entries(ks).forEach(([mid,v])=>{const hi=document.getElementById(`ko_${mid}_h`),ai=document.getElementById(`ko_${mid}_a`);if(hi)hi.value=v.h!==undefined?v.h:'';if(ai)ai.value=v.a!==undefined?v.a:'';});}catch(e){}}
+    if(d.scores){try{const scores=JSON.parse(d.scores);Object.entries(scores).forEach(([mid,v])=>{const hi=document.getElementById(`m_${mid}_h`),ai=document.getElementById(`m_${mid}_a`);if(hi)hi.value=v.h!==undefined?v.h:0;if(ai)ai.value=v.a!==undefined?v.a:0;});}catch(e){}}
+    else{Object.entries(GROUPS).forEach(([gid])=>{GROUP_MATCHES[gid].forEach((_,idx)=>{const mid=`${gid}_${idx}`;const hi=document.getElementById(`m_${mid}_h`),ai=document.getElementById(`m_${mid}_a`);if(hi)hi.value=0;if(ai)ai.value=0;});});}
+    if(d.ko_scores){try{const ks=JSON.parse(d.ko_scores);Object.entries(ks).forEach(([mid,v])=>{const hi=document.getElementById(`ko_${mid}_h`),ai=document.getElementById(`ko_${mid}_a`);if(hi)hi.value=v.h!==undefined?v.h:0;if(ai)ai.value=v.a!==undefined?v.a:0;});}catch(e){}}
     applyMatchLocks();
   }, 50);
 }
@@ -987,7 +988,18 @@ async function saveSeccion(seccion){
   }
   else if(seccion==='grupos'){
     const scores={};
-    Object.entries(GROUPS).forEach(([gid])=>{GROUP_MATCHES[gid].forEach((_,idx)=>{const mid=`${gid}_${idx}`;const hi=document.getElementById(`m_${mid}_h`),ai=document.getElementById(`m_${mid}_a`);if(hi&&hi.value!=='')scores[mid]={h:parseInt(hi.value)||0,a:parseInt(ai.value)||0};});});
+    const existingScores={};
+    try{if(existing.scores)Object.assign(existingScores,JSON.parse(existing.scores));}catch(e){}
+    Object.entries(GROUPS).forEach(([gid])=>{GROUP_MATCHES[gid].forEach((_,idx)=>{const mid=`${gid}_${idx}`;
+      if(isMatchLocked(mid)){
+        // Partido cerrado: mantener lo guardado o 0-0 si nunca se guardó
+        scores[mid]=existingScores[mid]||{h:0,a:0};
+      } else {
+        // Partido abierto: tomar el valor del input
+        const hi=document.getElementById(`m_${mid}_h`),ai=document.getElementById(`m_${mid}_a`);
+        scores[mid]={h:hi?parseInt(hi.value)||0:0,a:ai?parseInt(ai.value)||0:0};
+      }
+    });});
     const prode={...existing, scores:JSON.stringify(scores)};
     await dbSaveProde(pid,prode);toast('✅ Resultados de grupos guardados!');
   }
