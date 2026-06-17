@@ -7,11 +7,19 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root{--gold:#C9A84C;--gold-light:#E8C96A;--gold-dim:#7A6330;--silver:#A8B2BE;--bg-deep:#060810;--bg-card:#0E1320;--bg-card2:#131929;--border:rgba(201,168,76,0.18);--border-bright:rgba(201,168,76,0.5);--text:#EEF0F4;--text-dim:#7A8499;--red:#E84545;--green:#2ECC71}
+:root{--gold:#C9A84C;--gold-light:#E8C96A;--gold-dim:#7A6330;--silver:#A8B2BE;--bg-deep:#060810;--bg-card:#0E1320;--bg-card2:#131929;--border:rgba(201,168,76,0.18);--border-bright:rgba(201,168,76,0.5);--text:#EEF0F4;--text-dim:#7A8499;--red:#E84545;--green:#2ECC71;--celeste:#74ACDF}
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
-body{background:var(--bg-deep);color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;overflow-x:hidden}
-body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 50% -10%,rgba(201,168,76,0.08) 0%,transparent 70%);pointer-events:none;z-index:0}
+body{background:#060c10;color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+background:
+  repeating-linear-gradient(180deg,rgba(116,172,223,0.04) 0px,rgba(116,172,223,0.04) 80px,rgba(255,255,255,0.015) 80px,rgba(255,255,255,0.015) 160px),
+  linear-gradient(rgba(255,255,255,0.012) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(255,255,255,0.012) 1px,transparent 1px),
+  radial-gradient(ellipse 100% 50% at 50% 0%,rgba(116,172,223,0.15) 0%,transparent 65%),
+  radial-gradient(ellipse 60% 30% at 50% 100%,rgba(116,172,223,0.08) 0%,transparent 60%),
+  linear-gradient(180deg,#060c10 0%,#070e16 50%,#060c10 100%);
+background-size:100% 160px,100px 100px,100px 100px,100% 100%,100% 100%,100% 100%;}
 .app{position:relative;z-index:1;max-width:960px;margin:0 auto;padding:0 16px 60px}
 .hero{text-align:center;padding:36px 0 24px}
 .hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(201,168,76,0.1);border:1px solid var(--border-bright);border-radius:40px;padding:5px 16px;font-family:'Barlow Condensed',sans-serif;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:16px}
