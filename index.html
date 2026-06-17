@@ -205,7 +205,7 @@ const ADMIN_PASSWORD='golosinas2026';
 <div class="app">
 
 <div class="hero">
-  <img src="https://palmesano.com/wp-content/uploads/logo-palmesano-top.png" alt="Golosinas Oenp" style="height:60px;margin-bottom:14px;"/>
+  <img src="https://palmesano.com/wp-content/uploads/logo-palmesano-top.png" alt="Golosinas Oenp" style="height:60px;margin-bottom:14px;display:block;margin-left:auto;margin-right:auto"/>
   <div class="hero-badge">⭐⭐⭐ Mundial FIFA 2026 — Golosinas Oenp</div>
   <h1>Prode<span>Mundial 2026</span></h1>
   <p class="hero-sub">48 selecciones · 72 partidos de grupos · Fase eliminatoria</p>
@@ -919,16 +919,29 @@ function applyMatchLocks(){
       const block=document.querySelector(`.match-block[data-mid="${mid}"]`);
       if(!block)return;
       const locked=isMatchLocked(mid);
-      block.classList.toggle('locked',locked);
       const hi=document.getElementById(`m_${mid}_h`),ai=document.getElementById(`m_${mid}_a`);
-      if(hi){hi.readOnly=locked;hi.style.opacity=locked?'0.6':'1';hi.style.pointerEvents=locked?'none':'auto';}
-      if(ai){ai.readOnly=locked;ai.style.opacity=locked?'0.6':'1';ai.style.pointerEvents=locked?'none':'auto';}
-      // Show/hide lock icon
-      let lockEl=block.querySelector('.match-lock-icon');
-      if(locked && !lockEl){
+      if(locked){
+        block.classList.add('locked');
+        const hVal=hi?hi.value:'0';
+        const aVal=ai?ai.value:'0';
         const scoreRow=block.querySelector('.score-row');
-        if(scoreRow){lockEl=document.createElement('div');lockEl.className='match-lock-icon';lockEl.style.cssText='text-align:center;font-size:11px;color:var(--red);margin-top:5px;font-family:"Barlow Condensed",sans-serif;letter-spacing:.06em;text-transform:uppercase';lockEl.textContent='🔒 Cerrado';scoreRow.after(lockEl);}
-      } else if(!locked && lockEl){lockEl.remove();}
+        if(scoreRow && !block.querySelector('.locked-display')){
+          scoreRow.style.display='none';
+          const lockedDiv=document.createElement('div');
+          lockedDiv.className='locked-display';
+          lockedDiv.style.cssText='text-align:center;padding:10px 0';
+          lockedDiv.innerHTML=`<span style="font-family:\'Bebas Neue\',sans-serif;font-size:32px;color:var(--gold);letter-spacing:.04em">${hVal} — ${aVal}</span><div style="font-size:11px;color:var(--red);margin-top:4px;font-family:\'Barlow Condensed\',sans-serif;letter-spacing:.06em;text-transform:uppercase">🔒 Cerrado</div>`;
+          scoreRow.after(lockedDiv);
+        } else if(block.querySelector('.locked-display')){
+          block.querySelector('.locked-display').querySelector('span').textContent=`${hVal} — ${aVal}`;
+        }
+      } else {
+        block.classList.remove('locked');
+        const lockedDiv=block.querySelector('.locked-display');
+        if(lockedDiv)lockedDiv.remove();
+        const scoreRow=block.querySelector('.score-row');
+        if(scoreRow)scoreRow.style.display='';
+      }
     });
   });
   const firstMatchLocked=isMatchLocked('J_0');
