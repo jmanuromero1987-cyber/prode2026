@@ -765,15 +765,15 @@ async function addParticipant(){
 }
 async function renderParts(){
   const parts=await dbGetParts(),prodes=await dbGetProdes();
-  const pm={};prodes.forEach(p=>pm[p.participante_id]=p);
+  const pm={};prodes.forEach(p=>pm[String(p.participante_id)]=p);
   document.getElementById('part-count').textContent=parts.length;
-  const done=parts.filter(p=>pm[p.id]).length;
+  const done=parts.filter(p=>pm[String(p.id)]).length;
   const prog=document.getElementById('prode-progress');prog.style.display=parts.length?'block':'none';
   document.getElementById('progress-text').textContent=`${done}/${parts.length}`;
   document.getElementById('progress-bar').style.width=parts.length?`${done/parts.length*100}%`:'0%';
   const grid=document.getElementById('parts-grid');
   if(!parts.length){grid.innerHTML='<div class="empty-state"><div class="big">👥</div><p>¡Sé el primero!</p></div>';return;}
-  grid.innerHTML=parts.map(p=>{const av=p.foto?`<img src="${p.foto}" alt=""/>`:p.nombre.charAt(0).toUpperCase();const hp=!!pm[p.id];return `<div class="part-card"><div class="part-avatar">${av}</div><div class="part-info"><div class="pname">${p.nombre}</div><div class="part-status ${hp?'done':'pending'}">${hp?'✓ Prode cargado':'Pendiente'}</div></div><button class="btn btn-danger part-del" onclick="delPart(${p.id},'${p.nombre.replace(/'/g,"\\'")}')">✕</button></div>`;}).join('');
+  grid.innerHTML=parts.map(p=>{const av=p.foto?`<img src="${p.foto}" alt=""/>`:p.nombre.charAt(0).toUpperCase();const hp=!!pm[String(p.id)];return `<div class="part-card"><div class="part-avatar">${av}</div><div class="part-info"><div class="pname">${p.nombre}</div><div class="part-status ${hp?'done':'pending'}">${hp?'✓ Prode cargado':'Pendiente'}</div></div><button class="btn btn-danger part-del" onclick="delPart(${p.id},'${p.nombre.replace(/'/g,"\\'")}')">✕</button></div>`;}).join('');
 }
 async function delPart(id,name){if(!confirm(`¿Eliminar a ${name}?`))return;await dbDelPart(id);renderParts();refreshSelect();toast('Participante eliminado');}
 async function refreshSelect(){const parts=await dbGetParts();const sel=document.getElementById('prode-player');const cur=sel.value;sel.innerHTML='<option value="">— Seleccioná tu nombre —</option>'+parts.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join('');if(cur)sel.value=cur;}
@@ -970,9 +970,9 @@ async function _showProdeContent(pid, parts){
   document.querySelectorAll('.ptab').forEach((b,i)=>b.classList.toggle('active',i===0));
   document.querySelectorAll('.ptab-content').forEach((c,i)=>{c.style.display=i===0?'block':'none';c.classList.toggle('active',i===0);});
   const prodes=await dbGetProdes();
-  const pm={};prodes.forEach(p=>pm[p.participante_id]=p);
+  const pm={};prodes.forEach(p=>pm[String(p.participante_id)]=p);
   lock.style.display='none';
-  const d=pm[pid]||{};
+  const d=pm[String(pid)]||{};
   document.getElementById('top-scorer').value=d.goleador||'';
   selChamp=d.campeon||'';
   document.querySelectorAll('.champ-btn').forEach(b=>b.classList.toggle('active',b.textContent.trim()===selChamp&&!!selChamp));
@@ -1024,8 +1024,8 @@ async function saveSeccion(seccion){
   const pid=document.getElementById('prode-player').value;
   if(!pid){toast('⚠️ Seleccioná tu nombre');return;}
   const prodes=await dbGetProdes();
-  const pm={};prodes.forEach(p=>pm[p.participante_id]=p);
-  const existing=pm[pid]||{};
+  const pm={};prodes.forEach(p=>pm[String(p.participante_id)]=p);
+  const existing=pm[String(pid)]||{};
 
   if(seccion==='xi'){
     if(Object.keys(slotMap).length<11){toast('⚠️ Completá los 11 titulares en la cancha');return;}
@@ -1098,10 +1098,10 @@ function calcPts(prode,results){
 
 async function renderRanking(){
   const parts=await dbGetParts(),prodes=await dbGetProdes(),results=await dbGetResults();
-  const pm={};prodes.forEach(p=>pm[p.participante_id]=p);
+  const pm={};prodes.forEach(p=>pm[String(p.participante_id)]=p);
   const el=document.getElementById('ranking-list');
   if(!parts.length){el.innerHTML='<div class="empty-state"><div class="big">🏆</div><p>El ranking aparece cuando haya participantes.</p></div>';return;}
-  const rows=parts.map(p=>{const pr=pm[p.id]||{};return{...p,pts:calcPts(pr,results),hp:!!pm[p.id],pr};}).sort((a,b)=>b.pts-a.pts);
+  const rows=parts.map(p=>{const pr=pm[String(p.id)]||{};return{...p,pts:calcPts(pr,results),hp:!!pm[String(p.id)],pr};}).sort((a,b)=>b.pts-a.pts);
   el.innerHTML=rows.map((r,i)=>{const pos=i+1,pc=pos===1?'gold':pos===2?'silver':pos===3?'bronze':'';const av=r.foto?`<img src="${r.foto}" alt=""/>`:r.nombre.charAt(0).toUpperCase();const detail=r.hp?`Campeón: ${r.pr.campeon||'—'} · Goleador: ${r.pr.goleador||'—'}`:'Sin prode';return `<div class="rank-row"><div class="rank-pos ${pc}">${pos}</div><div class="rank-avatar">${av}</div><div class="rank-info"><div class="rank-name">${r.nombre}</div><div class="rank-detail">${detail}</div></div><div class="rank-pts">${r.pts}<span> pts</span></div></div>`;}).join('');
 }
 
