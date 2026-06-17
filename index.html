@@ -28,6 +28,12 @@ background:linear-gradient(180deg,rgba(6,8,16,0.7) 0%,rgba(6,8,16,0.5) 40%,rgba(
 .cd-lbl{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim)}
 .debut-bar{background:linear-gradient(90deg,rgba(201,168,76,0.1),rgba(116,172,223,0.06));border:1px solid var(--border);border-radius:10px;padding:10px 16px;margin:14px 0 24px;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;font-family:'Barlow Condensed',sans-serif;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-dim)}
 .debut-bar strong{color:var(--gold)}
+.neon-leader{background:rgba(0,0,0,0.5);border:1px solid rgba(116,172,223,0.6);border-radius:12px;padding:14px 24px;margin:14px 0 24px;text-align:center;position:relative;overflow:hidden;animation:neonPulse 2.5s ease-in-out infinite;}
+.neon-leader::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(116,172,223,0.08),transparent,rgba(201,168,76,0.06));pointer-events:none;}
+.neon-label{font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:rgba(116,172,223,0.8);margin-bottom:4px;}
+.neon-name{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:.06em;color:#fff;text-shadow:0 0 20px rgba(116,172,223,0.9),0 0 40px rgba(116,172,223,0.5),0 0 80px rgba(116,172,223,0.3);line-height:1;}
+.neon-pts{font-family:'Barlow Condensed',sans-serif;font-size:14px;letter-spacing:.08em;color:var(--gold);margin-top:5px;text-shadow:0 0 10px rgba(201,168,76,0.8);}
+@keyframes neonPulse{0%,100%{box-shadow:0 0 20px rgba(116,172,223,0.3),0 0 40px rgba(116,172,223,0.15)}50%{box-shadow:0 0 35px rgba(116,172,223,0.6),0 0 70px rgba(116,172,223,0.3)}}
 .nav{display:flex;gap:3px;background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:3px;margin-bottom:20px;flex-wrap:wrap}
 .nav-btn{flex:1;min-width:70px;padding:8px 5px;border:none;border-radius:10px;background:transparent;color:var(--text-dim);font-family:'Barlow Condensed',sans-serif;font-size:12px;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;transition:all .2s}
 .nav-btn.active{background:linear-gradient(135deg,rgba(201,168,76,0.2),rgba(201,168,76,0.06));color:var(--gold);border:1px solid var(--border-bright)}
@@ -225,9 +231,10 @@ const ADMIN_PASSWORD='golosinas2026';
   <div class="hero-badge">⭐⭐⭐ Mundial FIFA 2026 — Golosinas Oenp</div>
   <h1>Prode<span>Mundial 2026</span></h1>
   <p class="hero-sub">48 selecciones · 72 partidos de grupos · Fase eliminatoria</p>
-  <div class="debut-bar" id="leader-bar">
-    <span>🏆</span>
-    <div id="leader-text">Cargando ranking...</div>
+  <div class="neon-leader" id="leader-bar">
+    <div class="neon-label">🏆 Puntero del prode</div>
+    <div class="neon-name" id="leader-name">—</div>
+    <div class="neon-pts" id="leader-pts">Cargando...</div>
   </div>
 </div>
 
@@ -318,19 +325,6 @@ const ADMIN_PASSWORD='golosinas2026';
 
 <!-- PARTICIPANTES -->
 <div class="section active" id="tab-participantes">
-  <div class="add-form">
-    <h3>Agregar participante</h3>
-    <div class="form-row">
-      <div class="form-group"><label>Nombre</label><input type="text" id="new-name" placeholder="Tu nombre..." onkeydown="if(event.key==='Enter')addParticipant()"/></div>
-      <div class="form-group"><label>Foto de perfil</label>
-        <div class="photo-input">
-          <div class="photo-preview" id="photo-preview">📷</div>
-          <label class="file-label">Subir foto<input type="file" accept="image/*" style="display:none" onchange="previewPhoto(this)"/></label>
-        </div>
-      </div>
-    </div>
-    <div style="margin-top:9px"><button class="btn btn-gold" onclick="addParticipant()">Agregar al prode</button></div>
-  </div>
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">
     <div class="section-tag" style="margin:0">Participantes (<span id="part-count">0</span>)</div>
     <div id="prode-progress" style="display:none;flex:1;max-width:180px;margin-left:14px">
@@ -780,8 +774,10 @@ async function updateLeaderBar(){
   if(!parts.length)return;
   const rows=parts.map(p=>{const pr=pm[String(p.id)]||{};return{nombre:p.nombre,pts:calcPts(pr,results)};}).sort((a,b)=>b.pts-a.pts);
   const leader=rows[0];
-  const el=document.getElementById('leader-text');
-  if(el) el.innerHTML=`<strong style="color:var(--gold)">${leader.nombre}</strong> lidera el prode con <strong style="color:var(--gold)">${leader.pts} pts</strong>`;
+  const nameEl=document.getElementById('leader-name');
+  const ptsEl=document.getElementById('leader-pts');
+  if(nameEl)nameEl.textContent=leader.nombre;
+  if(ptsEl)ptsEl.textContent=`${leader.pts} puntos · ${rows.length} participantes`;
 }
 
 // ─── NAV ────────────────────────────────────────────────────────
