@@ -1108,8 +1108,47 @@ async function renderRanking(){
   const pm={};prodes.forEach(p=>pm[String(p.participante_id)]=p);
   const el=document.getElementById('ranking-list');
   if(!parts.length){el.innerHTML='<div class="empty-state"><div class="big">🏆</div><p>El ranking aparece cuando haya participantes.</p></div>';return;}
-  const rows=parts.map(p=>{const pr=pm[String(p.id)]||{};return{...p,pts:calcPts(pr,results),hp:!!pm[String(p.id)],pr};}).sort((a,b)=>b.pts-a.pts);
-  el.innerHTML=rows.map((r,i)=>{const pos=i+1,pc=pos===1?'gold':pos===2?'silver':pos===3?'bronze':'';const av=r.foto?`<img src="${r.foto}" alt=""/>`:r.nombre.charAt(0).toUpperCase();const detail=r.hp?`Campeón: ${r.pr.campeon||'—'} · Goleador: ${r.pr.goleador||'—'}`:'Sin prode';return `<div class="rank-row"><div class="rank-pos ${pc}">${pos}</div><div class="rank-avatar">${av}</div><div class="rank-info"><div class="rank-name">${r.nombre}</div><div class="rank-detail">${detail}</div></div><div class="rank-pts">${r.pts}<span> pts</span></div></div>`;}).join('');
+
+  // Calculate stats per participant
+  function getStats(pr, results){
+    let exactos=0, correctos=0, total=0;
+    if(pr.scores && results.scores){
+      try{
+        const ps=JSON.parse(pr.scores), rs=JSON.parse(results.scores);
+        Object.entries(rs).forEach(([mid,rv])=>{
+          const pv=ps[mid]; if(!pv)return; total++;
+          if(pv.h===rv.h && pv.a===rv.a) exactos++;
+          else if(Math.sign(pv.h-pv.a)===Math.sign(rv.h-rv.a)) correctos++;
+        });
+      }catch(e){}
+    }
+    return {exactos, correctos, total};
+  }
+
+  const rows=parts.map(p=>{
+    const pr=pm[String(p.id)]||{};
+    const pts=calcPts(pr,results);
+    const stats=getStats(pr,results);
+    return{...p,pts,hp:!!pm[String(p.id)],pr,stats};
+  }).sort((a,b)=>b.pts-a.pts);
+
+  el.innerHTML=rows.map((r,i)=>{
+    const pos=i+1,pc=pos===1?'gold':pos===2?'silver':pos===3?'bronze':'';
+    const av=r.foto?`<img src="${r.foto}" alt=""/>`:r.nombre.charAt(0).toUpperCase();
+    const detail=r.hp?`Campeón: ${r.pr.campeon||'—'} · Goleador: ${r.pr.goleador||'—'}`:'Sin prode';
+    const stars=r.stats.exactos>0?`<span style="color:var(--gold);font-size:11px;margin-left:6px">${'⭐'.repeat(Math.min(r.stats.exactos,5))} ${r.stats.exactos} exacto${r.stats.exactos!==1?'s':''}</span>`:'';
+    const statsHtml=r.hp&&r.stats.total>0?`<div style="font-size:10px;color:var(--text-dim);margin-top:3px">✅ ${r.stats.correctos} correctos · ⭐ ${r.stats.exactos} exactos de ${r.stats.total} jugados${stars}</div>`:'';
+    return `<div class="rank-row">
+      <div class="rank-pos ${pc}">${pos}</div>
+      <div class="rank-avatar">${av}</div>
+      <div class="rank-info">
+        <div class="rank-name">${r.nombre}</div>
+        <div class="rank-detail">${detail}</div>
+        ${statsHtml}
+      </div>
+      <div class="rank-pts">${r.pts}<span> pts</span></div>
+    </div>`;
+  }).join('');
 }
 
 // ─── ADMIN ───────────────────────────────────────────────────────
