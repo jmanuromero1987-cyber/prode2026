@@ -205,6 +205,7 @@ const ADMIN_PASSWORD='golosinas2026';
 <div class="app">
 
 <div class="hero">
+  <img src="https://palmesano.com/wp-content/uploads/logo-palmesano-top.png" alt="Golosinas Oenp" style="height:60px;margin-bottom:14px;"/>
   <div class="hero-badge">⭐⭐⭐ Mundial FIFA 2026 — Golosinas Oenp</div>
   <h1>Prode<span>Mundial 2026</span></h1>
   <p class="hero-sub">48 selecciones · 72 partidos de grupos · Fase eliminatoria</p>
@@ -920,11 +921,16 @@ function applyMatchLocks(){
       const locked=isMatchLocked(mid);
       block.classList.toggle('locked',locked);
       const hi=document.getElementById(`m_${mid}_h`),ai=document.getElementById(`m_${mid}_a`);
-      if(hi){hi.disabled=locked;hi.classList.toggle('locked-input',locked);}
-      if(ai){ai.disabled=locked;ai.classList.toggle('locked-input',locked);}
+      if(hi){hi.readOnly=locked;hi.style.opacity=locked?'0.6':'1';hi.style.pointerEvents=locked?'none':'auto';}
+      if(ai){ai.readOnly=locked;ai.style.opacity=locked?'0.6':'1';ai.style.pointerEvents=locked?'none':'auto';}
+      // Show/hide lock icon
+      let lockEl=block.querySelector('.match-lock-icon');
+      if(locked && !lockEl){
+        const scoreRow=block.querySelector('.score-row');
+        if(scoreRow){lockEl=document.createElement('div');lockEl.className='match-lock-icon';lockEl.style.cssText='text-align:center;font-size:11px;color:var(--red);margin-top:5px;font-family:"Barlow Condensed",sans-serif;letter-spacing:.06em;text-transform:uppercase';lockEl.textContent='🔒 Cerrado';scoreRow.after(lockEl);}
+      } else if(!locked && lockEl){lockEl.remove();}
     });
   });
-  // Also lock formation if first match locked
   const firstMatchLocked=isMatchLocked('J_0');
   document.querySelectorAll('#pitch .drop-slot').forEach(s=>s.style.pointerEvents=firstMatchLocked?'none':'');
   const clearBtn=document.querySelector('#pt-formacion .btn-outline');
@@ -979,11 +985,29 @@ async function _showProdeContent(pid, parts){
   buildSquadList(); // rebuild with correct used state
   // Load scores after form is built
   setTimeout(()=>{
-    if(d.scores){try{const scores=JSON.parse(d.scores);Object.entries(scores).forEach(([mid,v])=>{const hi=document.getElementById(`m_${mid}_h`),ai=document.getElementById(`m_${mid}_a`);if(hi)hi.value=v.h!==undefined?v.h:0;if(ai)ai.value=v.a!==undefined?v.a:0;});}catch(e){}}
-    else{Object.entries(GROUPS).forEach(([gid])=>{GROUP_MATCHES[gid].forEach((_,idx)=>{const mid=`${gid}_${idx}`;const hi=document.getElementById(`m_${mid}_h`),ai=document.getElementById(`m_${mid}_a`);if(hi)hi.value=0;if(ai)ai.value=0;});});}
+    // First load all saved scores
+    if(d.scores){
+      try{
+        const scores=JSON.parse(d.scores);
+        Object.entries(GROUPS).forEach(([gid])=>{GROUP_MATCHES[gid].forEach((_,idx)=>{
+          const mid=`${gid}_${idx}`;
+          const hi=document.getElementById(`m_${mid}_h`),ai=document.getElementById(`m_${mid}_a`);
+          const v=scores[mid];
+          if(hi)hi.value=v!==undefined?v.h:0;
+          if(ai)ai.value=v!==undefined?v.a:0;
+        });});
+      }catch(e){}
+    } else {
+      Object.entries(GROUPS).forEach(([gid])=>{GROUP_MATCHES[gid].forEach((_,idx)=>{
+        const mid=`${gid}_${idx}`;
+        const hi=document.getElementById(`m_${mid}_h`),ai=document.getElementById(`m_${mid}_a`);
+        if(hi)hi.value=0;if(ai)ai.value=0;
+      });});
+    }
     if(d.ko_scores){try{const ks=JSON.parse(d.ko_scores);Object.entries(ks).forEach(([mid,v])=>{const hi=document.getElementById(`ko_${mid}_h`),ai=document.getElementById(`ko_${mid}_a`);if(hi)hi.value=v.h!==undefined?v.h:0;if(ai)ai.value=v.a!==undefined?v.a:0;});}catch(e){}}
+    // Apply locks AFTER loading values so disabled doesn't prevent display
     applyMatchLocks();
-  }, 50);
+  }, 200);
 }
 
 // Primer partido del mundial: 11 jun 19:00 UTC (16:00 ARG)
