@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root{--gold:#C9A84C;--gold-light:#E8C96A;--gold-dim:#7A6330;--silver:#A8B2BE;--bg-deep:#060810;--bg-card:#0E1320;--bg-card2:#131929;--border:rgba(201,168,76,0.18);--border-bright:rgba(201,168,76,0.5);--text:#EEF0F4;--text-dim:#7A8499;--red:#E84545;--green:#2ECC71;--celeste:#74ACDF}
+:root{--gold:#C9A84C;--gold-light:#E8C96A;--gold-dim:#7A6330;--silver:#A8B2BE;--bg-deep:#060810;--bg-card:rgba(14,19,32,0.75);--bg-card2:rgba(19,25,41,0.65);--border:rgba(201,168,76,0.18);--border-bright:rgba(201,168,76,0.5);--text:#EEF0F4;--text-dim:#7A8499;--red:#E84545;--green:#2ECC71;--celeste:#74ACDF}
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
 body{background:#060c10;color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;overflow-x:hidden}
@@ -87,8 +87,8 @@ select option{background:var(--bg-card)}
 
 /* MATCH CARDS */
 .group-header{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--gold);letter-spacing:.06em;margin:16px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
-.match-block{background:var(--bg-card2);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:8px}
-.match-block.arg-match{border-color:rgba(116,172,223,0.4);background:rgba(116,172,223,0.04)}
+.match-block{background:rgba(19,25,41,0.55);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:8px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);}
+.match-block.arg-match{border-color:rgba(116,172,223,0.4);background:rgba(116,172,223,0.08)}
 .match-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:5px}
 .match-teams{display:flex;align-items:center;gap:7px;font-family:'Barlow Condensed',sans-serif;font-size:15px;letter-spacing:.04em}
 .match-flag{font-size:17px}
@@ -956,8 +956,9 @@ let selChamp='';
 function selectChamp(btn,name){selChamp=name;document.querySelectorAll('.champ-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
 
 // Apply visual locks to match inputs based on kickoff time
-function applyMatchLocks(scores){
+function applyMatchLocks(scores, realScores){
   scores=scores||{};
+  realScores=realScores||{};
   Object.entries(GROUP_MATCHES).forEach(([gid,matches])=>{
     matches.forEach((_,idx)=>{
       const mid=`${gid}_${idx}`;
@@ -969,16 +970,32 @@ function applyMatchLocks(scores){
         const v=scores[mid];
         const hVal=v!==undefined?v.h:0;
         const aVal=v!==undefined?v.a:0;
+        const rv=realScores[mid];
         const scoreRow=block.querySelector('.score-row');
-        // Remove existing locked display if any
         const existing=block.querySelector('.locked-display');
         if(existing)existing.remove();
         if(scoreRow){
           scoreRow.style.display='none';
           const lockedDiv=document.createElement('div');
           lockedDiv.className='locked-display';
-          lockedDiv.style.cssText='text-align:center;padding:10px 0';
-          lockedDiv.innerHTML=`<span style="font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--gold);letter-spacing:.04em">${hVal} — ${aVal}</span><div style="font-size:11px;color:var(--red);margin-top:4px;font-family:'Barlow Condensed',sans-serif;letter-spacing:.06em;text-transform:uppercase">🔒 Cerrado</div>`;
+          lockedDiv.style.cssText='padding:8px 0';
+          // Compare with real result
+          let badge='';
+          let realHtml='';
+          if(rv!==undefined){
+            const exact=hVal===rv.h&&aVal===rv.a;
+            const correct=Math.sign(hVal-aVal)===Math.sign(rv.h-rv.a);
+            badge=exact?'⭐':correct?'✅':'❌';
+            realHtml=`<span style="font-size:11px;color:var(--text-dim);margin:0 8px">|</span><span style="font-size:13px;color:var(--text-dim);font-family:'Barlow Condensed',sans-serif;letter-spacing:.04em">Real: </span><span style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:${exact?'var(--gold)':correct?'var(--green)':'var(--red)'};letter-spacing:.04em">${rv.h} — ${rv.a}</span> <span style="font-size:16px">${badge}</span>`;
+          }
+          lockedDiv.innerHTML=`<div style="display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:4px">
+            <div style="text-align:center">
+              <div style="font-size:10px;color:var(--text-dim);font-family:'Barlow Condensed',sans-serif;letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px">Tu prode</div>
+              <span style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--gold);letter-spacing:.04em">${hVal} — ${aVal}</span>
+            </div>
+            ${realHtml}
+          </div>
+          <div style="font-size:11px;color:var(--red);margin-top:4px;text-align:center;font-family:'Barlow Condensed',sans-serif;letter-spacing:.06em;text-transform:uppercase">🔒 Cerrado</div>`;
           scoreRow.after(lockedDiv);
         }
       } else {
@@ -1053,7 +1070,10 @@ async function _showProdeContent(pid, parts){
     if(ai)ai.value=v!==undefined?v.a:0;
   });});
   if(d.ko_scores){try{const ks=JSON.parse(d.ko_scores);Object.entries(ks).forEach(([mid,v])=>{const hi=document.getElementById(`ko_${mid}_h`),ai=document.getElementById(`ko_${mid}_a`);if(hi)hi.value=v.h!==undefined?v.h:0;if(ai)ai.value=v.a!==undefined?v.a:0;});}catch(e){}}
-  applyMatchLocks(scores);
+  const results=await dbGetResults();
+  let realScores={};
+  if(results.scores){try{realScores=JSON.parse(results.scores);}catch(e){}}
+  applyMatchLocks(scores, realScores);
 }
 
 // Primer partido del mundial: 11 jun 19:00 UTC (16:00 ARG)
