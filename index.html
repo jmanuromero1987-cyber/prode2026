@@ -12,14 +12,10 @@
 html{scroll-behavior:smooth}
 body{background:#060c10;color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;overflow-x:hidden}
 body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
-background:
-  repeating-linear-gradient(180deg,rgba(116,172,223,0.04) 0px,rgba(116,172,223,0.04) 80px,rgba(255,255,255,0.015) 80px,rgba(255,255,255,0.015) 160px),
-  linear-gradient(rgba(255,255,255,0.012) 1px,transparent 1px),
-  linear-gradient(90deg,rgba(255,255,255,0.012) 1px,transparent 1px),
-  radial-gradient(ellipse 100% 50% at 50% 0%,rgba(116,172,223,0.15) 0%,transparent 65%),
-  radial-gradient(ellipse 60% 30% at 50% 100%,rgba(116,172,223,0.08) 0%,transparent 60%),
-  linear-gradient(180deg,#060c10 0%,#070e16 50%,#060c10 100%);
-background-size:100% 160px,100px 100px,100px 100px,100% 100%,100% 100%,100% 100%;}
+background:url('https://jmanuromero1987-cyber.github.io/prode2026/bg.jpg') center center / cover no-repeat;
+opacity:0.25;}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+background:linear-gradient(180deg,rgba(6,8,16,0.7) 0%,rgba(6,8,16,0.5) 40%,rgba(6,8,16,0.7) 100%);}
 .app{position:relative;z-index:1;max-width:960px;margin:0 auto;padding:0 16px 60px}
 .hero{text-align:center;padding:36px 0 24px}
 .hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(201,168,76,0.1);border:1px solid var(--border-bright);border-radius:40px;padding:5px 16px;font-family:'Barlow Condensed',sans-serif;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:16px}
