@@ -754,6 +754,19 @@ function tick(){
 }
 setInterval(tick,1000);tick();
 
+// ─── AVATAR ─────────────────────────────────────────────────────
+function avatarColor(name){
+  const colors=[['#E84545','#ff6b6b'],['#C9A84C','#E8C96A'],['#2ECC71','#27ae60'],['#3A8EF6','#74ACDF'],['#9B59B6','#bb8fce'],['#E67E22','#f0a500'],['#1ABC9C','#16a085'],['#E91E8C','#ff69b4']];
+  let hash=0;for(let i=0;i<name.length;i++)hash=name.charCodeAt(i)+((hash<<5)-hash);
+  return colors[Math.abs(hash)%colors.length];
+}
+function makeAvatar(p,size=36){
+  if(p.foto)return `<img src="${p.foto}" alt="" style="width:100%;height:100%;object-fit:cover"/>`;
+  const [bg,fg]=avatarColor(p.nombre);
+  const initial=p.nombre.charAt(0).toUpperCase();
+  return `<span style="background:${bg};color:#fff;border:2px solid ${fg};font-size:${Math.round(size*.45)}px">${initial}</span>`;
+}
+
 // ─── NAV ────────────────────────────────────────────────────────
 function showTab(t){document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));document.getElementById('nav-'+t).classList.add('active');document.getElementById('tab-'+t).classList.add('active');if(t==='participantes')renderParts();if(t==='prode'){refreshSelect();buildSquadList();}if(t==='ranking')renderRanking();}
 function showPtab(id){
@@ -791,7 +804,7 @@ async function renderParts(){
   document.getElementById('progress-bar').style.width=parts.length?`${done/parts.length*100}%`:'0%';
   const grid=document.getElementById('parts-grid');
   if(!parts.length){grid.innerHTML='<div class="empty-state"><div class="big">👥</div><p>¡Sé el primero!</p></div>';return;}
-  grid.innerHTML=parts.map(p=>{const av=p.foto?`<img src="${p.foto}" alt=""/>`:p.nombre.charAt(0).toUpperCase();const hp=!!pm[String(p.id)];return `<div class="part-card"><div class="part-avatar">${av}</div><div class="part-info"><div class="pname">${p.nombre}</div><div class="part-status ${hp?'done':'pending'}">${hp?'✓ Prode cargado':'Pendiente'}</div></div><button class="btn btn-danger part-del" onclick="delPart(${p.id},'${p.nombre.replace(/'/g,"\\'")}')">✕</button></div>`;}).join('');
+  grid.innerHTML=parts.map(p=>{const av=makeAvatar(p,40);const hp=!!pm[String(p.id)];return `<div class="part-card"><div class="part-avatar">${av}</div><div class="part-info"><div class="pname">${p.nombre}</div><div class="part-status ${hp?'done':'pending'}">${hp?'✓ Prode cargado':'Pendiente'}</div></div><button class="btn btn-danger part-del" onclick="delPart(${p.id},'${p.nombre.replace(/'/g,"\\'")}')">✕</button></div>`;}).join('');
 }
 async function delPart(id,name){if(!confirm(`¿Eliminar a ${name}?`))return;await dbDelPart(id);renderParts();refreshSelect();toast('Participante eliminado');}
 async function refreshSelect(){const parts=await dbGetParts();const sel=document.getElementById('prode-player');const cur=sel.value;sel.innerHTML='<option value="">— Seleccioná tu nombre —</option>'+parts.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join('');if(cur)sel.value=cur;}
@@ -1147,7 +1160,7 @@ async function renderRanking(){
 
   el.innerHTML=rows.map((r,i)=>{
     const pos=i+1,pc=pos===1?'gold':pos===2?'silver':pos===3?'bronze':'';
-    const av=r.foto?`<img src="${r.foto}" alt=""/>`:r.nombre.charAt(0).toUpperCase();
+    const av=makeAvatar(r,36);
     const detail=r.hp?`Campeón: ${r.pr.campeon||'—'} · Goleador: ${r.pr.goleador||'—'}`:'Sin prode';
     const stats=r.stats;
     const statsHtml=r.hp&&stats.total>0?`<div style="font-size:10px;color:var(--text-dim);margin-top:3px">✅ ${stats.correctos} correctos · ⭐ ${stats.exactos} exactos de ${stats.total} jugados${stats.exactos>0?` <span style="color:var(--gold)">${'⭐'.repeat(Math.min(stats.exactos,5))} ${stats.exactos} exacto${stats.exactos!==1?'s':''}</span>`:''}</div>`:'';
