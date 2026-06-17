@@ -912,28 +912,30 @@ let selChamp='';
 function selectChamp(btn,name){selChamp=name;document.querySelectorAll('.champ-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
 
 // Apply visual locks to match inputs based on kickoff time
-function applyMatchLocks(){
+function applyMatchLocks(scores){
+  scores=scores||{};
   Object.entries(GROUP_MATCHES).forEach(([gid,matches])=>{
     matches.forEach((_,idx)=>{
       const mid=`${gid}_${idx}`;
       const block=document.querySelector(`.match-block[data-mid="${mid}"]`);
       if(!block)return;
       const locked=isMatchLocked(mid);
-      const hi=document.getElementById(`m_${mid}_h`),ai=document.getElementById(`m_${mid}_a`);
       if(locked){
         block.classList.add('locked');
-        const hVal=hi?hi.value:'0';
-        const aVal=ai?ai.value:'0';
+        const v=scores[mid];
+        const hVal=v!==undefined?v.h:0;
+        const aVal=v!==undefined?v.a:0;
         const scoreRow=block.querySelector('.score-row');
-        if(scoreRow && !block.querySelector('.locked-display')){
+        // Remove existing locked display if any
+        const existing=block.querySelector('.locked-display');
+        if(existing)existing.remove();
+        if(scoreRow){
           scoreRow.style.display='none';
           const lockedDiv=document.createElement('div');
           lockedDiv.className='locked-display';
           lockedDiv.style.cssText='text-align:center;padding:10px 0';
-          lockedDiv.innerHTML=`<span style="font-family:\'Bebas Neue\',sans-serif;font-size:32px;color:var(--gold);letter-spacing:.04em">${hVal} — ${aVal}</span><div style="font-size:11px;color:var(--red);margin-top:4px;font-family:\'Barlow Condensed\',sans-serif;letter-spacing:.06em;text-transform:uppercase">🔒 Cerrado</div>`;
+          lockedDiv.innerHTML=`<span style="font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--gold);letter-spacing:.04em">${hVal} — ${aVal}</span><div style="font-size:11px;color:var(--red);margin-top:4px;font-family:'Barlow Condensed',sans-serif;letter-spacing:.06em;text-transform:uppercase">🔒 Cerrado</div>`;
           scoreRow.after(lockedDiv);
-        } else if(block.querySelector('.locked-display')){
-          block.querySelector('.locked-display').querySelector('span').textContent=`${hVal} — ${aVal}`;
         }
       } else {
         block.classList.remove('locked');
@@ -998,29 +1000,20 @@ async function _showProdeContent(pid, parts){
   buildSquadList(); // rebuild with correct used state
   // Load scores after form is built
   setTimeout(()=>{
-    // First load all saved scores
-    if(d.scores){
-      try{
-        const scores=JSON.parse(d.scores);
-        Object.entries(GROUPS).forEach(([gid])=>{GROUP_MATCHES[gid].forEach((_,idx)=>{
-          const mid=`${gid}_${idx}`;
-          const hi=document.getElementById(`m_${mid}_h`),ai=document.getElementById(`m_${mid}_a`);
-          const v=scores[mid];
-          if(hi)hi.value=v!==undefined?v.h:0;
-          if(ai)ai.value=v!==undefined?v.a:0;
-        });});
-      }catch(e){}
-    } else {
-      Object.entries(GROUPS).forEach(([gid])=>{GROUP_MATCHES[gid].forEach((_,idx)=>{
-        const mid=`${gid}_${idx}`;
-        const hi=document.getElementById(`m_${mid}_h`),ai=document.getElementById(`m_${mid}_a`);
-        if(hi)hi.value=0;if(ai)ai.value=0;
-      });});
-    }
+    let scores={};
+    if(d.scores){try{scores=JSON.parse(d.scores);}catch(e){}}
+    // Load scores into inputs
+    Object.entries(GROUPS).forEach(([gid])=>{GROUP_MATCHES[gid].forEach((_,idx)=>{
+      const mid=`${gid}_${idx}`;
+      const hi=document.getElementById(`m_${mid}_h`),ai=document.getElementById(`m_${mid}_a`);
+      const v=scores[mid];
+      if(hi)hi.value=v!==undefined?v.h:0;
+      if(ai)ai.value=v!==undefined?v.a:0;
+    });});
     if(d.ko_scores){try{const ks=JSON.parse(d.ko_scores);Object.entries(ks).forEach(([mid,v])=>{const hi=document.getElementById(`ko_${mid}_h`),ai=document.getElementById(`ko_${mid}_a`);if(hi)hi.value=v.h!==undefined?v.h:0;if(ai)ai.value=v.a!==undefined?v.a:0;});}catch(e){}}
-    // Apply locks AFTER loading values so disabled doesn't prevent display
-    applyMatchLocks();
-  }, 200);
+    // Apply locks with scores data directly
+    applyMatchLocks(scores);
+  }, 300);
 }
 
 // Primer partido del mundial: 11 jun 19:00 UTC (16:00 ARG)
