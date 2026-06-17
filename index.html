@@ -1056,7 +1056,12 @@ function calcPts(prode,results){
   if(results.scorer&&prode.goleador&&prode.goleador.toLowerCase().includes(results.scorer.toLowerCase()))pts+=3;
   // XI bonus
   if(results.xi&&prode.xi){
-    try{const realXI=results.xi.split(',').map(s=>s.trim().toLowerCase());const myXI=Object.values(JSON.parse(prode.xi)).map(id=>{const p=SQUAD.find(q=>q.id===id);return p?p.short.toLowerCase():'';});const allMatch=realXI.length===11&&realXI.every(r=>myXI.some(m=>m.includes(r)||r.includes(m)));if(allMatch)pts+=3;}catch(e){}
+    try{
+      const realXI=results.xi.split(',').map(s=>s.trim().toLowerCase());
+      const myXI=Object.values(JSON.parse(prode.xi)).map(id=>id.toLowerCase());
+      const allMatch=realXI.length===11&&realXI.every(r=>myXI.includes(r));
+      if(allMatch)pts+=3;
+    }catch(e){}
   }
   return pts;
 }
