@@ -216,16 +216,9 @@ const ADMIN_PASSWORD='golosinas2026';
   <div class="hero-badge">⭐⭐⭐ Mundial FIFA 2026 — Golosinas Oenp</div>
   <h1>Prode<span>Mundial 2026</span></h1>
   <p class="hero-sub">48 selecciones · 72 partidos de grupos · Fase eliminatoria</p>
-  <div class="countdown">
-    <div class="cd-block"><div class="cd-num" id="cd-d">--</div><div class="cd-lbl">Días</div></div>
-    <div class="cd-block"><div class="cd-num" id="cd-h">--</div><div class="cd-lbl">Hs</div></div>
-    <div class="cd-block"><div class="cd-num" id="cd-m">--</div><div class="cd-lbl">Min</div></div>
-    <div class="cd-block"><div class="cd-num" id="cd-s">--</div><div class="cd-lbl">Seg</div></div>
-  </div>
-  <div class="debut-bar">
-    <img src="https://flagcdn.com/32x24/ar.png" style="border-radius:3px;vertical-align:middle" alt="Argentina"/>
-    <div><strong>Argentina vs Argelia</strong><br>Martes 16 de junio · 22:00hs · Kansas City</div>
-    <img src="https://flagcdn.com/32x24/dz.png" style="border-radius:3px;vertical-align:middle" alt="Argelia"/>
+  <div class="debut-bar" id="leader-bar">
+    <span>🏆</span>
+    <div id="leader-text">Cargando ranking...</div>
   </div>
 </div>
 
@@ -494,6 +487,10 @@ const ADMIN_PASSWORD='golosinas2026';
       <button class="btn btn-outline" onclick="closePinModal()">Cancelar</button>
     </div>
   </div>
+</div>
+
+<div id="result-notify" style="display:none;position:fixed;top:0;left:0;right:0;z-index:998;background:linear-gradient(90deg,var(--gold-dim),var(--gold));color:#060810;text-align:center;padding:10px;font-family:'Barlow Condensed',sans-serif;font-size:14px;letter-spacing:.06em;text-transform:uppercase;cursor:pointer" onclick="this.style.display='none'">
+  🏆 ¡Nuevo resultado cargado! El ranking se actualizó — tocá para cerrar
 </div>
 
 <div class="toast" id="toast"></div>
@@ -765,6 +762,17 @@ function makeAvatar(p,size=36){
   const [bg,fg]=avatarColor(p.nombre);
   const initial=p.nombre.charAt(0).toUpperCase();
   return `<span style="background:${bg};color:#fff;border:2px solid ${fg};font-size:${Math.round(size*.45)}px">${initial}</span>`;
+}
+
+// ─── LEADER BAR ─────────────────────────────────────────────────
+async function updateLeaderBar(){
+  const parts=await dbGetParts(),prodes=await dbGetProdes(),results=await dbGetResults();
+  const pm={};prodes.forEach(p=>pm[String(p.participante_id)]=p);
+  if(!parts.length)return;
+  const rows=parts.map(p=>{const pr=pm[String(p.id)]||{};return{nombre:p.nombre,pts:calcPts(pr,results)};}).sort((a,b)=>b.pts-a.pts);
+  const leader=rows[0];
+  const el=document.getElementById('leader-text');
+  if(el) el.innerHTML=`<strong style="color:var(--gold)">${leader.nombre}</strong> lidera el prode con <strong style="color:var(--gold)">${leader.pts} pts</strong>`;
 }
 
 // ─── NAV ────────────────────────────────────────────────────────
@@ -1226,7 +1234,8 @@ async function saveGroupResult(mid){
   if(isNaN(h)||isNaN(a)){toast('⚠️ Ingresá ambos valores');return;}
   const res=await dbGetResults();let scores={};
   if(res.scores){try{scores=JSON.parse(res.scores);}catch(e){}}
-  scores[mid]={h,a};await dbSaveResult('scores',JSON.stringify(scores));toast('✅ Resultado guardado');
+  scores[mid]={h,a};await dbSaveResult('scores',JSON.stringify(scores));
+  toast('✅ Resultado guardado — el ranking se actualizará automáticamente para todos');
 }
 
 async function saveKOMatch(mid){
@@ -1246,10 +1255,18 @@ async function saveRealScorer(){const v=document.getElementById('r-scorer').valu
 async function saveRealXI(){const v=document.getElementById('r-xi').value.trim();if(!v)return;await dbSaveResult('xi',v);toast('✅ XI guardado');}
 
 // ─── REALTIME ────────────────────────────────────────────────────
-if(isConnected){sb.channel('changes').on('postgres_changes',{event:'*',schema:'public'},()=>{const act=document.querySelector('.section.active').id;if(act==='tab-participantes')renderParts();if(act==='tab-ranking')renderRanking();}).subscribe();}
+if(isConnected){sb.channel('changes').on('postgres_changes',{event:'*',schema:'public'},()=>{
+  const act=document.querySelector('.section.active').id;
+  if(act==='tab-participantes')renderParts();
+  if(act==='tab-ranking')renderRanking();
+  updateLeaderBar();
+  // Show notification banner
+  const notify=document.getElementById('result-notify');
+  if(notify){notify.style.display='block';setTimeout(()=>notify.style.display='none',6000);}
+}).subscribe();}
 
 // ─── INIT ─────────────────────────────────────────────────────────
-renderParts();buildSquadList();
+renderParts();buildSquadList();updateLeaderBar();
 </script>
 </body>
 </html>
