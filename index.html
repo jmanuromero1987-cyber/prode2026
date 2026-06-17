@@ -965,21 +965,21 @@ async function _showProdeContent(pid, parts){
   const content=document.getElementById('prode-content'),lock=document.getElementById('lock-notice');
   content.style.display='block';
   lock.style.display='none';
+  // Fetch data FIRST before building forms
+  const prodes=await dbGetProdes();
+  const pm={};prodes.forEach(p=>pm[String(p.participante_id)]=p);
+  const d=pm[String(pid)]||{};
+  // Now build forms with data available
   buildGroupsForm();
   buildKOForm();
   document.querySelectorAll('.ptab').forEach((b,i)=>b.classList.toggle('active',i===0));
   document.querySelectorAll('.ptab-content').forEach((c,i)=>{c.style.display=i===0?'block':'none';c.classList.toggle('active',i===0);});
-  const prodes=await dbGetProdes();
-  const pm={};prodes.forEach(p=>pm[String(p.participante_id)]=p);
-  lock.style.display='none';
-  const d=pm[String(pid)]||{};
   document.getElementById('top-scorer').value=d.goleador||'';
   selChamp=d.campeon||'';
   document.querySelectorAll('.champ-btn').forEach(b=>b.classList.toggle('active',b.textContent.trim()===selChamp&&!!selChamp));
-  // Show campeon lock warning if applicable
   const campeonWarn=document.getElementById('campeon-lock-warn');
   if(campeonWarn) campeonWarn.style.display=isCampeonLocked()?'block':'none';
-  // Reset slotMap and load XI before building squad list
+  // Load XI
   slotMap={};
   SLOTS.forEach(sid=>{
     const circle=document.getElementById('circle-'+sid);
@@ -996,24 +996,20 @@ async function _showProdeContent(pid, parts){
     circle.classList.add('filled');
     const sn=circle.querySelector('.slot-num');if(sn)sn.style.display='none';
     const nameEl=document.getElementById('name-'+sid);if(nameEl)nameEl.textContent=player.short;
-  });updateCount();}catch(e){console.error('XI load error',e);}}
-  buildSquadList(); // rebuild with correct used state
-  // Load scores after form is built
-  setTimeout(()=>{
-    let scores={};
-    if(d.scores){try{scores=JSON.parse(d.scores);}catch(e){}}
-    // Load scores into inputs
-    Object.entries(GROUPS).forEach(([gid])=>{GROUP_MATCHES[gid].forEach((_,idx)=>{
-      const mid=`${gid}_${idx}`;
-      const hi=document.getElementById(`m_${mid}_h`),ai=document.getElementById(`m_${mid}_a`);
-      const v=scores[mid];
-      if(hi)hi.value=v!==undefined?v.h:0;
-      if(ai)ai.value=v!==undefined?v.a:0;
-    });});
-    if(d.ko_scores){try{const ks=JSON.parse(d.ko_scores);Object.entries(ks).forEach(([mid,v])=>{const hi=document.getElementById(`ko_${mid}_h`),ai=document.getElementById(`ko_${mid}_a`);if(hi)hi.value=v.h!==undefined?v.h:0;if(ai)ai.value=v.a!==undefined?v.a:0;});}catch(e){}}
-    // Apply locks with scores data directly
-    applyMatchLocks(scores);
-  }, 300);
+  });updateCount();}catch(e){}}
+  buildSquadList();
+  // Load scores directly - data is already available
+  let scores={};
+  if(d.scores){try{scores=JSON.parse(d.scores);}catch(e){}}
+  Object.entries(GROUPS).forEach(([gid])=>{GROUP_MATCHES[gid].forEach((_,idx)=>{
+    const mid=`${gid}_${idx}`;
+    const hi=document.getElementById(`m_${mid}_h`),ai=document.getElementById(`m_${mid}_a`);
+    const v=scores[mid];
+    if(hi)hi.value=v!==undefined?v.h:0;
+    if(ai)ai.value=v!==undefined?v.a:0;
+  });});
+  if(d.ko_scores){try{const ks=JSON.parse(d.ko_scores);Object.entries(ks).forEach(([mid,v])=>{const hi=document.getElementById(`ko_${mid}_h`),ai=document.getElementById(`ko_${mid}_a`);if(hi)hi.value=v.h!==undefined?v.h:0;if(ai)ai.value=v.a!==undefined?v.a:0;});}catch(e){}}
+  applyMatchLocks(scores);
 }
 
 // Primer partido del mundial: 11 jun 19:00 UTC (16:00 ARG)
