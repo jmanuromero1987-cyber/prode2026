@@ -216,9 +216,9 @@ const ADMIN_PASSWORD='golosinas2026';
     <div class="cd-block"><div class="cd-num" id="cd-s">--</div><div class="cd-lbl">Seg</div></div>
   </div>
   <div class="debut-bar">
-    <span style="font-size:24px">🇦🇷</span>
+    <img src="https://flagcdn.com/32x24/ar.png" style="border-radius:3px;vertical-align:middle" alt="Argentina"/>
     <div><strong>Argentina vs Argelia</strong><br>Martes 16 de junio · 22:00hs · Kansas City</div>
-    <span style="font-size:24px">🇩🇿</span>
+    <img src="https://flagcdn.com/32x24/dz.png" style="border-radius:3px;vertical-align:middle" alt="Argelia"/>
   </div>
 </div>
 
@@ -493,19 +493,21 @@ const ADMIN_PASSWORD='golosinas2026';
 
 <script>
 // ─── FIXTURE DATA ────────────────────────────────────────────────
+const FLAG = (code) => `<img src="https://flagcdn.com/20x15/${code}.png" width="20" height="15" style="border-radius:2px;vertical-align:middle;margin-right:4px" alt=""/>`;
+
 const GROUPS = {
-  A:{name:'Grupo A',teams:['🇲🇽 México','🇿🇦 Sudáfrica','🇰🇷 Corea del Sur','🇨🇿 Rep. Checa']},
-  B:{name:'Grupo B',teams:['🇨🇦 Canadá','🇧🇦 Bosnia-Herz.','🇶🇦 Qatar','🇨🇭 Suiza']},
-  C:{name:'Grupo C',teams:['🇧🇷 Brasil','🇲🇦 Marruecos','🇭🇹 Haití','🏴󠁧󠁢󠁳󠁣󠁴󠁿 Escocia']},
-  D:{name:'Grupo D',teams:['🇺🇸 EE.UU.','🇵🇾 Paraguay','🇦🇺 Australia','🇹🇷 Turquía']},
-  E:{name:'Grupo E',teams:['🇩🇪 Alemania','🇨🇼 Curazao','🇨🇮 Costa de Marfil','🇪🇨 Ecuador']},
-  F:{name:'Grupo F',teams:['🇳🇱 Países Bajos','🇯🇵 Japón','🇸🇪 Suecia','🇹🇳 Túnez']},
-  G:{name:'Grupo G',teams:['🇧🇪 Bélgica','🇪🇬 Egipto','🇮🇷 Irán','🇳🇿 Nueva Zelanda']},
-  H:{name:'Grupo H',teams:['🇪🇸 España','🇨🇻 Cabo Verde','🇸🇦 Arabia Saudita','🇺🇾 Uruguay']},
-  I:{name:'Grupo I',teams:['🇫🇷 Francia','🇸🇳 Senegal','🇮🇶 Irak','🇳🇴 Noruega']},
-  J:{name:'Grupo J ⭐',teams:['🇦🇷 Argentina','🇩🇿 Argelia','🇦🇹 Austria','🇯🇴 Jordania']},
-  K:{name:'Grupo K',teams:['🇵🇹 Portugal','🇨🇩 RD Congo','🇺🇿 Uzbekistán','🇨🇴 Colombia']},
-  L:{name:'Grupo L',teams:['🏴󠁧󠁢󠁥󠁮󠁧󠁿 Inglaterra','🇭🇷 Croacia','🇬🇭 Ghana','🇵🇦 Panamá']},
+  A:{name:'Grupo A',teams:[FLAG('mx')+'México',FLAG('za')+'Sudáfrica',FLAG('kr')+'Corea del Sur',FLAG('cz')+'Rep. Checa']},
+  B:{name:'Grupo B',teams:[FLAG('ca')+'Canadá',FLAG('ba')+'Bosnia-Herz.',FLAG('qa')+'Qatar',FLAG('ch')+'Suiza']},
+  C:{name:'Grupo C',teams:[FLAG('br')+'Brasil',FLAG('ma')+'Marruecos',FLAG('ht')+'Haití',FLAG('gb-sct')+'Escocia']},
+  D:{name:'Grupo D',teams:[FLAG('us')+'EE.UU.',FLAG('py')+'Paraguay',FLAG('au')+'Australia',FLAG('tr')+'Turquía']},
+  E:{name:'Grupo E',teams:[FLAG('de')+'Alemania',FLAG('cw')+'Curazao',FLAG('ci')+'Costa de Marfil',FLAG('ec')+'Ecuador']},
+  F:{name:'Grupo F',teams:[FLAG('nl')+'Países Bajos',FLAG('jp')+'Japón',FLAG('se')+'Suecia',FLAG('tn')+'Túnez']},
+  G:{name:'Grupo G',teams:[FLAG('be')+'Bélgica',FLAG('eg')+'Egipto',FLAG('ir')+'Irán',FLAG('nz')+'Nueva Zelanda']},
+  H:{name:'Grupo H',teams:[FLAG('es')+'España',FLAG('cv')+'Cabo Verde',FLAG('sa')+'Arabia Saudita',FLAG('uy')+'Uruguay']},
+  I:{name:'Grupo I',teams:[FLAG('fr')+'Francia',FLAG('sn')+'Senegal',FLAG('iq')+'Irak',FLAG('no')+'Noruega']},
+  J:{name:'Grupo J ⭐',teams:[FLAG('ar')+'Argentina',FLAG('dz')+'Argelia',FLAG('at')+'Austria',FLAG('jo')+'Jordania']},
+  K:{name:'Grupo K',teams:[FLAG('pt')+'Portugal',FLAG('cd')+'RD Congo',FLAG('uz')+'Uzbekistán',FLAG('co')+'Colombia']},
+  L:{name:'Grupo L',teams:[FLAG('gb-eng')+'Inglaterra',FLAG('hr')+'Croacia',FLAG('gh')+'Ghana',FLAG('pa')+'Panamá']},
 };
 
 // Each group has 3 matches per jornada (6 total)
