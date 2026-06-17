@@ -733,7 +733,16 @@ async function dbAddComment(mid,autor,texto,avatar){
 }
 
 // ─── COUNTDOWN ──────────────────────────────────────────────────
-function tick(){const debut=new Date('2026-06-17T01:00:00Z');const diff=debut-new Date();if(diff<=0){document.getElementById('countdown').style.display='none';return;}const d=Math.floor(diff/86400000),h=Math.floor((diff%86400000)/3600000),m=Math.floor((diff%3600000)/60000),s=Math.floor((diff%60000)/1000);document.getElementById('cd-d').textContent=d;document.getElementById('cd-h').textContent=String(h).padStart(2,'0');document.getElementById('cd-m').textContent=String(m).padStart(2,'0');document.getElementById('cd-s').textContent=String(s).padStart(2,'0');}
+function tick(){
+  const el=document.getElementById('countdown');
+  if(!el)return;
+  const debut=new Date('2026-06-17T01:00:00Z');
+  const diff=debut-new Date();
+  if(diff<=0){el.style.display='none';return;}
+  const d=Math.floor(diff/86400000),h=Math.floor((diff%86400000)/3600000),m=Math.floor((diff%3600000)/60000),s=Math.floor((diff%60000)/1000);
+  const ed=document.getElementById('cd-d'),eh=document.getElementById('cd-h'),em=document.getElementById('cd-m'),es=document.getElementById('cd-s');
+  if(ed)ed.textContent=d;if(eh)eh.textContent=String(h).padStart(2,'0');if(em)em.textContent=String(m).padStart(2,'0');if(es)es.textContent=String(s).padStart(2,'0');
+}
 setInterval(tick,1000);tick();
 
 // ─── NAV ────────────────────────────────────────────────────────
