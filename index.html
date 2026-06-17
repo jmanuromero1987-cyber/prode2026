@@ -153,7 +153,14 @@ select option{background:var(--bg-card)}
 
 /* RANKING */
 .ranking-list{display:flex;flex-direction:column;gap:6px}
-.rank-row{background:var(--bg-card2);border:1px solid var(--border);border-radius:10px;padding:10px 13px;display:flex;align-items:center;gap:10px}
+.rank-row{background:var(--bg-card2);border:1px solid var(--border);border-radius:10px;padding:10px 13px;display:flex;align-items:center;gap:10px;transition:all .4s ease;animation:rankIn .4s ease}
+@keyframes rankIn{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
+.rank-row.moved-up{border-color:rgba(46,204,113,0.5);background:rgba(46,204,113,0.05)}
+.rank-row.moved-down{border-color:rgba(232,69,69,0.3);background:rgba(232,69,69,0.03)}
+.rank-change{font-size:11px;min-width:20px;text-align:center}
+.rank-change.up{color:var(--green)}
+.rank-change.down{color:var(--red)}
+.rank-change.same{color:var(--text-dim)}
 .rank-pos{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--text-dim);min-width:24px;text-align:center}
 .rank-pos.gold{color:var(--gold)}
 .rank-pos.silver{color:var(--silver)}
@@ -1132,13 +1139,28 @@ async function renderRanking(){
     return{...p,pts,hp:!!pm[String(p.id)],pr,stats};
   }).sort((a,b)=>b.pts-a.pts);
 
+  // Track previous positions
+  const prevPositions = {};
+  document.querySelectorAll('.rank-row[data-name]').forEach(row=>{
+    prevPositions[row.dataset.name] = parseInt(row.dataset.pos)||0;
+  });
+
   el.innerHTML=rows.map((r,i)=>{
     const pos=i+1,pc=pos===1?'gold':pos===2?'silver':pos===3?'bronze':'';
     const av=r.foto?`<img src="${r.foto}" alt=""/>`:r.nombre.charAt(0).toUpperCase();
     const detail=r.hp?`Campeón: ${r.pr.campeon||'—'} · Goleador: ${r.pr.goleador||'—'}`:'Sin prode';
-    const stars=r.stats.exactos>0?`<span style="color:var(--gold);font-size:11px;margin-left:6px">${'⭐'.repeat(Math.min(r.stats.exactos,5))} ${r.stats.exactos} exacto${r.stats.exactos!==1?'s':''}</span>`:'';
-    const statsHtml=r.hp&&r.stats.total>0?`<div style="font-size:10px;color:var(--text-dim);margin-top:3px">✅ ${r.stats.correctos} correctos · ⭐ ${r.stats.exactos} exactos de ${r.stats.total} jugados${stars}</div>`:'';
-    return `<div class="rank-row">
+    const stats=r.stats;
+    const statsHtml=r.hp&&stats.total>0?`<div style="font-size:10px;color:var(--text-dim);margin-top:3px">✅ ${stats.correctos} correctos · ⭐ ${stats.exactos} exactos de ${stats.total} jugados${stats.exactos>0?` <span style="color:var(--gold)">${'⭐'.repeat(Math.min(stats.exactos,5))} ${stats.exactos} exacto${stats.exactos!==1?'s':''}</span>`:''}</div>`:'';
+    // Position change indicator
+    let changeHtml='<div class="rank-change same">—</div>';
+    let rowClass='rank-row';
+    if(prevPositions[r.nombre]!==undefined && prevPositions[r.nombre]!==0){
+      const prev=prevPositions[r.nombre];
+      if(pos<prev){changeHtml=`<div class="rank-change up">▲${prev-pos}</div>`;rowClass='rank-row moved-up';}
+      else if(pos>prev){changeHtml=`<div class="rank-change down">▼${pos-prev}</div>`;rowClass='rank-row moved-down';}
+    }
+    return `<div class="${rowClass}" data-name="${r.nombre}" data-pos="${pos}">
+      ${changeHtml}
       <div class="rank-pos ${pc}">${pos}</div>
       <div class="rank-avatar">${av}</div>
       <div class="rank-info">
