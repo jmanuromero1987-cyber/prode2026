@@ -726,20 +726,42 @@ let local={
 };
 function saveLocal(){localStorage.setItem('p26_parts',JSON.stringify(local.participants));localStorage.setItem('p26_prodes',JSON.stringify(local.prodes));localStorage.setItem('p26_results',JSON.stringify(local.results));localStorage.setItem('p26_comments',JSON.stringify(local.comments));}
 
-async function dbGetParts(){if(!isConnected)return local.participants;const{data}=await sb.from('participantes').select('*').order('created_at');return data||[];}
+// ─── CACHE ────────────────────────────────────────────────────
+let _cache={parts:null,prodes:null,results:null,ts:0};
+const CACHE_TTL=30000;
+function cacheExpired(){return Date.now()-_cache.ts>CACHE_TTL;}
+function invalidateCache(){_cache={parts:null,prodes:null,results:null,ts:0};}
+async function dbGetParts(){
+  if(_cache.parts&&!cacheExpired())return _cache.parts;
+  if(!isConnected)return local.participants;
+  const{data}=await sb.from('participantes').select('*').order('created_at');
+  _cache.parts=data||[];_cache.ts=Date.now();return _cache.parts;
+}
 async function dbAddPart(nombre,foto,pinHash){
   if(!isConnected){if(local.participants.find(p=>p.nombre.toLowerCase()===nombre.toLowerCase()))return null;const p={id:Date.now(),nombre,foto:foto||'',pin_hash:pinHash||''};local.participants.push(p);saveLocal();return p;}
   const{data,error}=await sb.from('participantes').insert({nombre,foto:foto||'',pin_hash:pinHash||''}).select().single();return error?null:data;
 }
 async function dbDelPart(id){if(!isConnected){local.participants=local.participants.filter(p=>p.id!==id);delete local.prodes[id];saveLocal();return;}await sb.from('participantes').delete().eq('id',id);await sb.from('prodes').delete().eq('participante_id',id);}
-async function dbGetProdes(){if(!isConnected)return Object.values(local.prodes);const{data}=await sb.from('prodes').select('*');return data||[];}
+async function dbGetProdes(){
+  if(_cache.prodes&&!cacheExpired())return _cache.prodes;
+  if(!isConnected)return Object.values(local.prodes);
+  const{data}=await sb.from('prodes').select('*');
+  _cache.prodes=data||[];return _cache.prodes;
+}
 async function dbSaveProde(pid,prode){
   if(!isConnected){local.prodes[pid]={...prode,participante_id:pid};saveLocal();return true;}
   const{data:ex}=await sb.from('prodes').select('id').eq('participante_id',pid).single();
   if(ex)await sb.from('prodes').update({...prode,updated_at:new Date().toISOString()}).eq('participante_id',pid);
-  else await sb.from('prodes').insert({participante_id:pid,...prode});return true;
+  else await sb.from('prodes').insert({participante_id:pid,...prode});
+  invalidateCache();
+  return true;
 }
-async function dbGetResults(){if(!isConnected)return local.results;const{data}=await sb.from('resultados').select('*').single();return data||{};}
+async function dbGetResults(){
+  if(_cache.results&&!cacheExpired())return _cache.results;
+  if(!isConnected)return local.results;
+  const{data}=await sb.from('resultados').select('*').single();
+  _cache.results=data||{};return _cache.results;
+}
 async function dbSaveResult(key,val){
   if(!isConnected){local.results[key]=val;saveLocal();return;}
   const{data:ex}=await sb.from('resultados').select('id').single();
@@ -1350,11 +1372,11 @@ async function saveRealXI(){const v=document.getElementById('r-xi').value.trim()
 
 // ─── REALTIME ────────────────────────────────────────────────────
 if(isConnected){sb.channel('changes').on('postgres_changes',{event:'*',schema:'public'},()=>{
+  invalidateCache();
   const act=document.querySelector('.section.active').id;
   if(act==='tab-participantes')renderParts();
   if(act==='tab-ranking')renderRanking();
   updateLeaderBar();
-  // Show notification banner
   const notify=document.getElementById('result-notify');
   if(notify){notify.style.display='block';setTimeout(()=>notify.style.display='none',6000);}
 }).subscribe();}
