@@ -1106,6 +1106,8 @@ async function loadViewProde(){
 
   container.innerHTML=html;
 }
+
+async function loadProde(){
   const pid=document.getElementById('prode-player').value;
   const content=document.getElementById('prode-content'),lock=document.getElementById('lock-notice');
   if(!pid){content.style.display='none';lock.style.display='none';return;}
