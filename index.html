@@ -667,7 +667,7 @@ buildKickoffMap();
 function isMatchLocked(mid) {
   const ko = MATCH_KICKOFFS[mid];
   if (!ko) return false; // KO matches: never auto-locked (admin controls)
-  const lockTime = new Date(ko.getTime() - 30 * 60 * 1000);
+  const lockTime = new Date(ko.getTime());
   return new Date() >= lockTime;
 }
 
@@ -882,18 +882,30 @@ function buildGroupsForm(){
 }
 
 // ─── BUILD KO FORM ───────────────────────────────────────────────
-function buildKOForm(){
+async function buildKOForm(){
   let html='';
+  // Load KO data from results to show teams defined by admin
+  let koData={};
+  try{
+    const results=await dbGetResults();
+    if(results.ko_scores){koData=JSON.parse(results.ko_scores);}
+  }catch(e){}
+
   KO_ROUNDS.forEach(round=>{
     html+=`<div class="group-header">${round.label}</div>`;
     round.matches.forEach(m=>{
+      const ko=koData[m.id];
+      const home=ko?.home||'';
+      const away=ko?.away||'';
+      const teamsLabel=home&&away?`${home} vs ${away}`:'Por definir';
+      const isLocked=home&&away; // only allow betting if teams are defined
       html+=`<div class="ko-match">
         <div class="ko-label">${m.label}</div>
-        <div class="ko-teams" id="ko_teams_${m.id}">Por definir</div>
-        <div class="score-row" style="margin-top:8px">
-          <input class="score-in" type="number" min="0" max="20" id="ko_${m.id}_h" placeholder="0"/>
+        <div class="ko-teams" id="ko_teams_${m.id}" style="color:${isLocked?'var(--text)':'var(--text-dim)'}">${teamsLabel}</div>
+        <div class="score-row" style="margin-top:8px;${!isLocked?'opacity:0.4;pointer-events:none':''}">
+          <input class="score-in" type="number" min="0" max="20" id="ko_${m.id}_h" placeholder="0" ${!isLocked?'disabled':''}/>
           <span class="score-sep">—</span>
-          <input class="score-in" type="number" min="0" max="20" id="ko_${m.id}_a" placeholder="0"/>
+          <input class="score-in" type="number" min="0" max="20" id="ko_${m.id}_a" placeholder="0" ${!isLocked?'disabled':''}/>
         </div>
       </div>`;
     });
