@@ -664,6 +664,20 @@ function buildKickoffMap() {
 }
 buildKickoffMap();
 
+// KO match kickoff times (ARG time)
+const KO_KICKOFFS = {
+  'r16_1': ARG_TO_UTC('28 jun', '16:00'), // Sudáfrica vs Canadá
+  'r16_2': ARG_TO_UTC('29 jun', '14:00'), // Brasil vs Japón
+  'r16_3': ARG_TO_UTC('29 jun', '17:30'), // Alemania vs Paraguay
+  'r16_4': ARG_TO_UTC('29 jun', '22:00'), // Países Bajos vs Marruecos
+};
+
+function isKOMatchLocked(mid) {
+  const ko = KO_KICKOFFS[mid];
+  if (!ko) return false;
+  return new Date() >= ko;
+}
+
 function isMatchLocked(mid) {
   const ko = MATCH_KICKOFFS[mid];
   if (!ko) return false; // KO matches: never auto-locked (admin controls)
@@ -898,15 +912,18 @@ async function buildKOForm(){
       const home=ko?.home||'';
       const away=ko?.away||'';
       const teamsLabel=home&&away?`${home} vs ${away}`:'Por definir';
-      const isLocked=home&&away; // only allow betting if teams are defined
+      const isLocked = home && away && isKOMatchLocked(m.id);
+      const isPending = !home || !away;
+      const canBet = home && away && !isKOMatchLocked(m.id);
       html+=`<div class="ko-match">
         <div class="ko-label">${m.label}</div>
-        <div class="ko-teams" id="ko_teams_${m.id}" style="color:${isLocked?'var(--text)':'var(--text-dim)'}">${teamsLabel}</div>
-        <div class="score-row" style="margin-top:8px;${!isLocked?'opacity:0.4;pointer-events:none':''}">
-          <input class="score-in" type="number" min="0" max="20" id="ko_${m.id}_h" placeholder="0" ${!isLocked?'disabled':''}/>
+        <div class="ko-teams" id="ko_teams_${m.id}" style="color:${!isPending?'var(--text)':'var(--text-dim)'}">${teamsLabel}</div>
+        <div class="score-row" style="margin-top:8px;${isPending?'opacity:0.4;pointer-events:none':''}">
+          <input class="score-in" type="number" min="0" max="20" id="ko_${m.id}_h" placeholder="0" ${isPending||isLocked?'disabled':''}/>
           <span class="score-sep">—</span>
-          <input class="score-in" type="number" min="0" max="20" id="ko_${m.id}_a" placeholder="0" ${!isLocked?'disabled':''}/>
+          <input class="score-in" type="number" min="0" max="20" id="ko_${m.id}_a" placeholder="0" ${isPending||isLocked?'disabled':''}/>
         </div>
+        ${isLocked?'<div style="font-size:11px;color:var(--red);margin-top:4px;text-align:center;font-family:\'Barlow Condensed\',sans-serif;letter-spacing:.06em;text-transform:uppercase">🔒 Cerrado</div>':''}
       </div>`;
     });
   });
