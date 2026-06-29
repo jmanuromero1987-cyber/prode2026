@@ -920,9 +920,9 @@ async function buildKOForm(savedKoScores){
       const isLocked=home&&away&&isKOMatchLocked(m.id);
       const isPending=!home||!away;
       const timeLabel=koTimes[m.id]||'';
-      const saved=savedKoScores?.[m.id];
-      const hVal=saved!==undefined?saved.h:'';
-      const aVal=saved!==undefined?saved.a:'';
+      const saved=savedKoScores&&savedKoScores[m.id]?savedKoScores[m.id]:null;
+      const hVal=saved!==null&&saved.h!==undefined?saved.h:0;
+      const aVal=saved!==null&&saved.a!==undefined?saved.a:0;
 
       if(isLocked){
         html+=`<div class="ko-match">
@@ -932,7 +932,7 @@ async function buildKOForm(savedKoScores){
           </div>
           <div class="ko-teams" style="color:var(--text)">${teamsLabel}</div>
           <div style="text-align:center;padding:8px 0">
-            <span style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--gold)">${hVal!==''?hVal:0} — ${aVal!==''?aVal:0}</span>
+            <span style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--gold)">${hVal} — ${aVal}</span>
             <div style="font-size:11px;color:var(--red);margin-top:2px;font-family:'Barlow Condensed',sans-serif;letter-spacing:.06em;text-transform:uppercase">🔒 Cerrado</div>
           </div>
         </div>`;
@@ -1413,6 +1413,18 @@ async function adminLogin(){
     if(res.scorer)document.getElementById('r-scorer').value=res.scorer;
     if(res.xi)document.getElementById('r-xi').value=res.xi;
     if(res.scores){try{const rs=JSON.parse(res.scores);Object.entries(rs).forEach(([mid,v])=>{const hi=document.getElementById(`ar_${mid}_h`),ai=document.getElementById(`ar_${mid}_a`);if(hi)hi.value=v.h;if(ai)ai.value=v.a;});}catch(e){}}
+    // Load existing KO data
+    if(res.ko_scores){try{const ks=JSON.parse(res.ko_scores);Object.entries(ks).forEach(([mid,v])=>{
+      const hEl=document.getElementById(`ko_home_${mid}`),aEl=document.getElementById(`ko_away_${mid}`);
+      const rhEl=document.getElementById(`ko_rh_${mid}`),raEl=document.getElementById(`ko_ra_${mid}`);
+      if(hEl&&v.home)hEl.value=v.home;
+      if(aEl&&v.away)aEl.value=v.away;
+      if(rhEl&&v.h!==undefined)rhEl.value=v.h;
+      if(raEl&&v.a!==undefined)raEl.value=v.a;
+      // Update teams display
+      const teamsEl=document.getElementById(`ko_teams_${mid}`);
+      if(teamsEl&&v.home&&v.away)teamsEl.textContent=`${v.home} vs ${v.away}`;
+    });}catch(e){}}
     // Populate PIN reset select
     const parts=await dbGetParts();
     const sel=document.getElementById('reset-pin-player');
